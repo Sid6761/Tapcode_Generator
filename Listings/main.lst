@@ -1,0 +1,155 @@
+C51 COMPILER V9.60.0.0   MAIN                                                              04/12/2021 15:20:20 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main
+                    -.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include <at89c5131.h>
+   2          #include "lcd.h"    //Header file with LCD interfacing functions
+   3          #include "serial.c" //C file with UART interfacing functions
+   4          #include "Timer.c"
+   5          sbit LED=P1^7;
+   6          
+   7          //Test function definitions
+   8          
+   9          /************************************************
+  10            pulse_gen()
+  11            pulse_gen function generates a 1 sec pulse on p0.3
+  12          ************************************************/
+  13          void pulse_gen(void)
+  14          {// Generates a pulse of 270 Hz(Re) for 1 sec
+  15   1        TL0=0x8f;
+  16   1        TH0=0xf1;
+  17   1        pulse=1;
+  18   1        TR0=1;
+  19   1        msdelay(1000);
+  20   1        TR0=0;
+  21   1        pulse=0;
+  22   1      } 
+  23          
+  24          /************************************************
+  25             play_code()
+  26            play_code function calls pulse_gen function to get desire tap
+  27          ************************************************/
+  28          void play_code(int r,int c){
+  29   1        int i;
+  30   1      for(i=0; i<c;i++){
+  31   2      pulse_gen();
+  32   2      msdelay(1000);
+  33   2      }
+  34   1      msdelay(1000);
+  35   1      for(i=0; i<r;i++){
+  36   2      pulse_gen();
+  37   2      msdelay(1000);
+  38   2      }
+  39   1      }
+  40          /************************************************
+  41          tape_code():
+  42            tape_code function finds the tape code for character and plays it.
+  43          ************************************************/
+  44          void tape_code(unsigned char ch)
+  45          {
+  46   1        int x=ch-'A';
+  47   1        int r=0;
+  48   1        int c=0;
+  49   1        if(x==10){// Tape_code for K
+  50   2       r=3;
+  51   2       c=1;
+  52   2      
+  53   2        }
+  54   1      else if(x<10){ //Tape_code for alphabets before K
+C51 COMPILER V9.60.0.0   MAIN                                                              04/12/2021 15:20:20 PAGE 2   
+
+  55   2        r=(x%5)+1;
+  56   2        c=(x/5)+1;
+  57   2      }
+  58   1      else{ // Alphabets after 'K'
+  59   2      
+  60   2        if((x%5)==0){ 
+  61   3      
+  62   3           r=5;
+  63   3           c=x/5;
+  64   3      
+  65   3        }
+  66   2        else{
+  67   3          r=x%5;
+  68   3          c=(x/5)+1;
+  69   3        }
+  70   2      }
+  71   1      play_code(r,c);
+  72   1      }
+  73          
+  74          
+  75          //Main function
+  76          void main(void)
+  77          {
+  78   1        unsigned char ch=0;
+  79   1        
+  80   1      
+  81   1        //Call initialization functions
+  82   1        lcd_init();
+  83   1        uart_init();
+  84   1        Timer_init();
+  85   1        
+  86   1        //These strings will be printed in terminal software
+  87   1      transmit_string("Enter the char");
+  88   1        
+  89   1        while(1)
+  90   1        {  lcd_cmd(0x01);
+  91   2          lcd_cmd(0x80);
+  92   2         lcd_write_string("Input Please");
+  93   2            //Receive a character
+  94   2            ch = receive_char();
+  95   2          
+  96   2            //Decide which test function to run based on character sent
+  97   2            //Displays the string on the terminal software
+  98   2            switch(ch)
+  99   2            {
+ 100   3              case 'A':  case 'B': case 'C': case 'D':  case 'E':  case 'F': case 'G':  case 'H':  case 'I':  case '
+             -J':  case 'K': case 'L':  
+ 101   3              case 'M': case 'N':  case 'O':  case 'P': case 'Q':  case 'R': case 'S':  case 'T': case 'U':  case 'V
+             -':  case 'W':  case 'X':  
+ 102   3              case 'Y': case 'Z': 
+ 103   3                lcd_cmd(0x01); //clear display
+ 104   3                tape_code(ch);
+ 105   3                break;
+ 106   3              
+ 107   3              case 'a':  case 'b': case 'c': case 'd':  case 'e':  case 'f': case 'g':  case 'h':  case 'i':  case '
+             -j':  case 'k': case 'l':  
+ 108   3              case 'm': case 'n':  case 'o':  case 'p': case 'q':  case 'r': case 's':  case 't': case 'u':  case 'v
+             -':  case 'w':  case 'x':  
+ 109   3              case 'y': case 'z': 
+ 110   3                lcd_cmd(0x01); //clear display
+ 111   3                tape_code(ch+'A'-'a'); // get the capital equivalent
+ 112   3                break;
+C51 COMPILER V9.60.0.0   MAIN                                                              04/12/2021 15:20:20 PAGE 3   
+
+ 113   3                
+ 114   3              default: lcd_cmd(0x01);
+ 115   3                lcd_cmd(0x80);
+ 116   3                    lcd_write_string("Invalid Input");
+ 117   3                     msdelay(2000);
+ 118   3                       break;
+ 119   3              
+ 120   3            }
+ 121   2            msdelay(100);
+ 122   2        }
+ 123   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    651    ----
+   CONSTANT SIZE    =     42    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      13
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      2    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
